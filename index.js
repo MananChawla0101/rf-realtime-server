@@ -79,3 +79,23 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`🚀 Realtime server listening on port ${PORT}`);
 });
+// GET /getRF  — returns latest readings
+app.get("/getRF", async (req, res) => {
+  try {
+    if (!mongoClient) {
+      return res.status(500).json({ success: false, error: "Mongo not connected" });
+    }
+    const collection = mongoClient.db(DB_NAME).collection(COLLECTION_NAME);
+    // fetch latest 50 by timestamp (assumes timestamp is stored as Date or ISO string)
+    const docs = await collection
+      .find({})
+      .sort({ timestamp: -1 })
+      .limit(50)
+      .toArray();
+
+    res.json({ success: true, data: docs });
+  } catch (err) {
+    console.error("GET /getRF error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
